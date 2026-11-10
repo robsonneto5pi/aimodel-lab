@@ -81,7 +81,7 @@ components:
       - name: LLAMA_CACHE
         value: /tmp/llama-cache
     endpoints:
-      - name: autocomplete-api
+      - name: complete-api
         targetPort: 8081
         exposure: none
 commands:
