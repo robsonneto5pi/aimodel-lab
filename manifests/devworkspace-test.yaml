@@ -1,0 +1,111 @@
+﻿apiVersion: workspace.devfile.io/v1alpha2
+kind: DevWorkspace
+metadata:
+  name: aimodel-lab-test
+  namespace: ai-lab
+spec:
+  started: true
+  routingClass: basic
+  template:
+    attributes:
+      controller.devfile.io/storage-type: ephemeral
+    components:
+    - name: udi
+      container:
+        image: quay.io/devfile/universal-developer-image:ubi9-latest
+        memoryLimit: 4Gi
+        memoryRequest: 2Gi
+        cpuLimit: 2000m
+        cpuRequest: 500m
+        mountSources: true
+        sourceMapping: /projects
+    # Chat: IBM Granite 3.3 8B Instruct (Q4_K_M ~5GB) servido por llama.cpp (ppc64le)
+    - name: llm-chat
+      attributes:
+        container-overrides:
+          resources:
+            limits:
+              cpu: 6000m
+              memory: 10Gi
+            requests:
+              cpu: 2000m
+              memory: 7Gi
+      container:
+        image: quay.io/ramalama/ramalama:latest
+        command: ["llama-server"]
+        args:
+          - "-hf"
+          - "ibm-granite/granite-3.3-8b-instruct-GGUF:Q4_K_M"
+          - "--host"
+          - "0.0.0.0"
+          - "--port"
+          - "8080"
+          - "-c"
+          - "8192"
+        env:
+          - name: HOME
+            value: /tmp
+          - name: LLAMA_CACHE
+            value: /tmp/llama-cache
+        endpoints:
+          - name: chat-api
+            targetPort: 8080
+            exposure: none
+    # Autocomplete: StarCoder2 3B (Q4_K_M ~1.8GB)
+    - name: llm-autocomplete
+      attributes:
+        container-overrides:
+          resources:
+            limits:
+              cpu: 3000m
+              memory: 5Gi
+            requests:
+              cpu: 1000m
+              memory: 3Gi
+      container:
+        image: quay.io/ramalama/ramalama:latest
+        command: ["llama-server"]
+        args:
+          - "-hf"
+          - "second-state/StarCoder2-3B-GGUF:Q4_K_M"
+          - "--host"
+          - "0.0.0.0"
+          - "--port"
+          - "8081"
+          - "-c"
+          - "4096"
+        env:
+          - name: HOME
+            value: /tmp
+          - name: LLAMA_CACHE
+            value: /tmp/llama-cache
+        endpoints:
+          - name: autocomplete-api
+            targetPort: 8081
+            exposure: none
+    commands:
+      - id: copyconfig
+        exec:
+          component: udi
+          commandLine: |
+            mkdir -p /home/user/.continue && cat > /home/user/.continue/config.yaml <<'EOF'
+            name: aimodel-lab
+            version: 1.0.0
+            schema: v1
+            models:
+              - name: Granite 3.3 8B (chat)
+                provider: llama.cpp
+                model: granite-3.3-8b-instruct
+                apiBase: http://localhost:8080
+                roles: [chat, edit, apply]
+              - name: StarCoder2 3B (autocomplete)
+                provider: llama.cpp
+                model: starcoder2-3b
+                apiBase: http://localhost:8081
+                roles: [autocomplete]
+            EOF
+    events:
+      postStart:
+        - copyconfig
+    
+

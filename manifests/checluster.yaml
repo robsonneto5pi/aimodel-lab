@@ -1,0 +1,16 @@
+apiVersion: org.eclipse.che/v2
+kind: CheCluster
+metadata:
+  name: devspaces
+  namespace: openshift-devspaces
+spec:
+  components:
+    cheServer:
+      debug: false
+    pluginRegistry:
+      openVSXURL: https://open-vsx.org
+  devEnvironments:
+    storage:
+      pvcStrategy: per-user
+    defaultNamespace:
+      template: <username>-devspaces

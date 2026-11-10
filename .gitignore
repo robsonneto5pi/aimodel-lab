@@ -1,0 +1,8 @@
+# Credenciais e chaves (NUNCA versionar)
+.env
+.secrets/
+*.pem
+kubeconfig*
+
+# Clone de referencia do repositorio original da Red Hat
+cde-ollama-continue/

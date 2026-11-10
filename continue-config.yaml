@@ -1,0 +1,18 @@
+name: aimodel-lab
+version: 1.0.0
+schema: v1
+models:
+  - name: Granite 3.3 8B (chat)
+    provider: llama.cpp
+    model: granite-3.3-8b-instruct
+    apiBase: http://localhost:8080
+    roles:
+      - chat
+      - edit
+      - apply
+  - name: StarCoder2 3B (autocomplete)
+    provider: llama.cpp
+    model: starcoder2-3b
+    apiBase: http://localhost:8081
+    roles:
+      - autocomplete
